@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
-from types import TracebackType
-from typing import Any
+from typing import Any, Literal
 
 
 def utc_now_iso() -> str:
@@ -27,12 +26,9 @@ def exception_metadata(exc_type: type[BaseException] | None, exc: BaseException 
     """Serialize exception details for event metadata."""
     if exc_type is None or exc is None:
         return {}
-    return {"error_type": exc_type.__name__, "error_message": str(exc)}
+    return {"exception_type": exc_type.__name__, "exception_message": str(exc)}
 
 
-def status_from_exception(exc_type: type[BaseException] | None) -> str:
+def status_from_exception(exc_type: type[BaseException] | None) -> Literal["ok", "error"]:
     """Map exception presence to event status."""
     return "error" if exc_type is not None else "ok"
-
-
-ExcInfo = tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
