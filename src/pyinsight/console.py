@@ -5,7 +5,7 @@ from __future__ import annotations
 from pyinsight.events import TraceEvent
 
 
-def render_tree(events: list[TraceEvent]) -> str:
+def render_tree(events: list[TraceEvent], *, include_kind: bool = False) -> str:
     """Render the event list as a readable tree."""
     if not events:
         return ""
@@ -17,7 +17,15 @@ def render_tree(events: list[TraceEvent]) -> str:
     lines: list[str] = []
     roots = by_parent.get(None, [])
     for index, root in enumerate(roots):
-        _render_event(lines, by_parent, root, prefix="", is_last=index == len(roots) - 1, is_root=True)
+        _render_event(
+            lines,
+            by_parent,
+            root,
+            prefix="",
+            is_last=index == len(roots) - 1,
+            is_root=True,
+            include_kind=include_kind,
+        )
     return "\n".join(lines)
 
 
@@ -29,12 +37,19 @@ def _render_event(
     prefix: str,
     is_last: bool,
     is_root: bool,
+    include_kind: bool,
 ) -> None:
     connector = "" if is_root else ("└── " if is_last else "├── ")
-    suffix = " [SLOW]" if event.metadata.get("slow") else ""
     duration = f"{(event.duration_ms or 0.0):.2f}ms"
-    status = " [ERROR]" if event.status == "error" else ""
-    lines.append(f"{prefix}{connector}{event.name} {duration}{suffix}{status}")
+    markers: list[str] = []
+    if include_kind and event.kind != "trace":
+        markers.append(event.kind.upper())
+    if event.metadata.get("slow"):
+        markers.append("SLOW")
+    if event.status == "error":
+        markers.append("ERROR")
+    marker_suffix = "".join(f" [{marker}]" for marker in markers)
+    lines.append(f"{prefix}{connector}{event.name} {duration}{marker_suffix}")
 
     child_prefix = prefix + ("" if is_root else ("    " if is_last else "│   "))
     children = by_parent.get(event.event_id, [])
@@ -46,4 +61,5 @@ def _render_event(
             prefix=child_prefix,
             is_last=index == len(children) - 1,
             is_root=False,
+            include_kind=include_kind,
         )

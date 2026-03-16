@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
+from types import TracebackType
 from typing import Any
 
+from pyinsight.events import EventKind
 from pyinsight.recorder import ActiveEvent
 from pyinsight.runtime import get_recorder
-from pyinsight.utils import ExcInfo, exception_metadata, status_from_exception
+from pyinsight.utils import exception_metadata, status_from_exception
 
 
 class SpanContext(AbstractContextManager["SpanContext"], AbstractAsyncContextManager["SpanContext"]):
@@ -17,7 +19,7 @@ class SpanContext(AbstractContextManager["SpanContext"], AbstractAsyncContextMan
         self,
         name: str,
         *,
-        kind: str = "span",
+        kind: EventKind = "span",
         metadata: dict[str, Any] | None = None,
         slow_threshold_ms: float | None = None,
     ) -> None:
@@ -35,14 +37,19 @@ class SpanContext(AbstractContextManager["SpanContext"], AbstractAsyncContextMan
         self._active_event = recorder.start_event(name=self._name, kind=self._kind, metadata=metadata)
         return self
 
-    def __exit__(self, exc_type: ExcInfo[0], exc: ExcInfo[1], _: ExcInfo[2]) -> bool:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        _: TracebackType | None,
+    ) -> bool:
         if self._active_event is None:
             return False
         recorder = get_recorder()
         final_metadata = exception_metadata(exc_type, exc)
         event = recorder.finish_event(
             self._active_event,
-            status=status_from_exception(exc_type),  # type: ignore[arg-type]
+            status=status_from_exception(exc_type),
             metadata=final_metadata,
         )
         if self._slow_threshold_ms is not None and event.duration_ms is not None:
@@ -52,14 +59,19 @@ class SpanContext(AbstractContextManager["SpanContext"], AbstractAsyncContextMan
     async def __aenter__(self) -> "SpanContext":
         return self.__enter__()
 
-    async def __aexit__(self, exc_type: ExcInfo[0], exc: ExcInfo[1], tb: ExcInfo[2]) -> bool:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> bool:
         return self.__exit__(exc_type, exc, tb)
 
 
 def create_span(
     name: str,
     *,
-    kind: str = "span",
+    kind: EventKind = "span",
     slow_threshold_ms: float | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> SpanContext:
