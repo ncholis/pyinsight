@@ -1,31 +1,42 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyinsight"
 version = "0.1.0"
-description = "Lightweight runtime tracing toolkit for Python and AI workflows."
+description = "Lightweight runtime tracing toolkit for Python applications and AI workflows."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
   { name = "pyinsight contributors" }
 ]
-keywords = ["tracing", "profiling", "observability", "async", "ai"]
+keywords = ["tracing", "profiling", "observability", "instrumentation", "async"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
-  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Typing :: Typed",
+  "Topic :: Software Development :: Debuggers",
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = []
 
+[project.urls]
+Homepage = "https://github.com/ncholis/pyinsight"
+Repository = "https://github.com/ncholis/pyinsight"
+Issues = "https://github.com/ncholis/pyinsight/issues"
+
 [project.optional-dependencies]
-dev = ["pytest>=8.0"]
+dev = [
+  "build>=1.2",
+  "pytest>=8.0",
+]
 
 [project.scripts]
 pyinsight = "pyinsight.cli:main"
@@ -39,4 +50,4 @@ where = ["src"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q --basetemp=.pytest_tmp_run"

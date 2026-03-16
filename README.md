@@ -160,8 +160,27 @@ pip install -e .[dev]
 ## Testing
 
 ```bash
+pip install -e .[dev]
 python -m pytest
 ```
+
+## Building and releasing
+
+Build locally:
+
+```bash
+pip install -e .[dev]
+python -m build
+```
+
+Publish a release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The GitHub release workflow publishes to PyPI using Trusted Publishing. Before tagging a release, configure a Trusted Publisher for this repository in the PyPI project settings and approve the `pypi` GitHub Actions environment if your repository requires it.
 
 ## Project layout
 
